@@ -1,0 +1,330 @@
+{
+  "dynamic": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "species": {
+        "title": "Species supported",
+        "description": "Changes in this property (`$.species`) trigger the resolution of the actual (depending on the values being selected) schema of a dependent property (`$.subspecies`)",
+        "type": "string",
+        "enum": [
+          "human",
+          "dog",
+          "cat"
+        ],
+        "required": true
+      },
+      "subspecies": {
+        "dependsOn": [
+          "species"
+        ]
+      }
+    }
+  },
+  "simple": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "title": "A boolean",
+    "description": "A simple boolean data type as schema root",
+    "type": "boolean"
+  },
+  "complex": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "pageNum": {
+        "type": "integer",
+        "title": "Page number",
+        "description": "Page number to be queried, `1-based`. See [Pagination](https://en.wikipedia.org/wiki/Pagination) for more details",
+        "default": 1,
+        "required": true
+      },
+      "pageSize": {
+        "type": "integer",
+        "title": "Page size",
+        "description": "Number of records per page",
+        "required": true,
+        "default": 50,
+        "enum": [
+          10,
+          25,
+          50,
+          100
+        ]
+      },
+      "selectedFacetValues": {
+        "type": "array",
+        "title": "Query terms",
+        "minItems": 2,
+        "items": {
+          "description": "Query item",
+          "type": "object",
+          "properties": {
+            "facetName": {
+              "type": "string",
+              "title": "Field name",
+              "description": "Indexed field name",
+              "required": true
+            },
+            "matchAllNull": {
+              "type": "boolean",
+              "title": "Match nulls"
+            },
+            "matchAllNotNull": {
+              "type": "boolean",
+              "title": "Match not nulls"
+            },
+            "facetValues": {
+              "type": "array",
+              "title": "Field values",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "title": "Value"
+                  }
+                }
+              }
+            },
+            "included": {
+              "type": "boolean",
+              "title": "Included"
+            }
+          }
+        }
+      },
+      "sorts": {
+        "type": "array",
+        "title": "Sorting",
+        "items": {
+          "type": "object",
+          "properties": {
+            "fieldName": {
+              "type": "string",
+              "title": "Field name"
+            },
+            "ascending": {
+              "type": "boolean",
+              "title": "Ascending"
+            }
+          }
+        }
+      }
+    }
+  },
+  "initial": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "pageNum": {
+        "type": "integer",
+        "title": "Page number",
+        "description": "Page number to be queried, `1-based`. See [Pagination](https://en.wikipedia.org/wiki/Pagination) for more details",
+        "default": 1,
+        "required": true
+      },
+      "pageSize": {
+        "type": "integer",
+        "title": "Page size",
+        "description": "Number of records per page",
+        "required": true,
+        "default": 50,
+        "enum": [
+          10,
+          25,
+          50,
+          100
+        ]
+      },
+      "selectedFacetValues": {
+        "type": "array",
+        "title": "Query terms",
+        "minItems": 2,
+        "items": {
+          "description": "Query item",
+          "type": "object",
+          "properties": {
+            "facetName": {
+              "type": "string",
+              "title": "Field name",
+              "description": "Indexed field name",
+              "required": true
+            },
+            "matchAllNull": {
+              "type": "boolean",
+              "title": "Match nulls"
+            },
+            "matchAllNotNull": {
+              "type": "boolean",
+              "title": "Match not nulls"
+            },
+            "facetValues": {
+              "type": "array",
+              "title": "Field values",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "title": "Value"
+                  }
+                }
+              }
+            },
+            "included": {
+              "type": "boolean",
+              "title": "Included"
+            }
+          }
+        }
+      },
+      "sorts": {
+        "type": "array",
+        "title": "Sorting",
+        "items": {
+          "type": "object",
+          "properties": {
+            "fieldName": {
+              "type": "string",
+              "title": "Field name"
+            },
+            "ascending": {
+              "type": "boolean",
+              "title": "Ascending"
+            }
+          }
+        }
+      }
+    }
+  },
+  "string": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "s1": {
+        "type": "string",
+        "title": "A validated string",
+        "minLength": 1,
+        "maxLength": 2,
+        "pattern": "a",
+        "description": "A string of length `1` or `2` characters long and containing `'a'`"
+      }
+    }
+  },
+  "numeric": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "num1": {
+        "type": "integer",
+        "title": "A number",
+        "minimum": 1,
+        "maximum": 10,
+        "multipleOf": 3,
+        "description": "An integer multiple of `3`, between `1` and `10` (inclusive)"
+      },
+      "num2": {
+        "type": "integer",
+        "title": "Other number",
+        "minimum": 1,
+        "exclusiveMinimum": true,
+        "maximum": 10,
+        "exclusiveMaximum": true,
+        "description": "A integer between `2` and `9` (inclusive). This example makes use of `exclusiveMinimum` and `exclusiveMaximum` schema keywords"
+      }
+    }
+  },
+  "additional": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "fixed": {
+        "description": "Object supporting schema-fixed additional properties",
+        "type": "object",
+        "maxProperties": 2,
+        "additionalProperties": {
+          "description": "Fixed-schema additional property",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "age": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "free": {
+        "description": "Object supporting schema-free additional properties",
+        "type": "object",
+        "maxProperties": 3,
+        "additionalProperties": true
+      }
+    }
+  },
+  "oneOf": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "oneOf": [
+      {
+        "type": "number",
+        "required": true,
+        "multipleOf": 3,
+        "title": "A multiple of 3"
+      },
+      {
+        "title": "An object",
+        "type": "object",
+        "properties": {
+          "p1": {
+            "type": "string",
+            "required": true,
+            "title": "A required string"
+          },
+          "p2": {
+            "type": "boolean",
+            "title": "A boolean"
+          }
+        }
+      }
+    ]
+  },
+  "textarea": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "prop1": {
+        "type": "string",
+        "title": "A short string",
+        "description": "A short string property whose input is rendered as `input`"
+      },
+      "prop2": {
+        "type": "string",
+        "title": "A long text",
+        "format": "text",
+        "description": "A long text property whose input is rendered as `textarea`"
+      }
+    }
+  },
+  "custom": {
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+      "file": {
+        "type": "string",
+        "format": "inputstream",
+        "description": "Using a custom format decorator with **glyphicon** via `addFormatDecorator(...)` of the bootstrap extension script"
+      },
+      "color": {
+        "type": "string",
+        "format": "color",
+        "description": "Using a custom format decorator via `addFormatDecorator(...)` of the bootstrap extension script"
+      },
+      "date": {
+        "type": "string",
+        "format": "date",
+        "description": "Using a custom format decorator with glyphicon via `addFormatDecorator(...)` of the bootstrap extension script"
+      }
+    }
+  }
+}

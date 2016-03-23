@@ -18,7 +18,7 @@ module.exports = function (config) {
 
             // all files, including non-commonJS files you need to load before your test cases
             files: [
-                'src/js/brutusin-json-forms.js',
+                //'src/js/brutusin-json-forms.js',
                 'test/index.spec.js'
             ],
 

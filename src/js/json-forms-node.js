@@ -1,76 +1,46 @@
-/*
- * Copyright 2015 brutusin.org
- *
- * Licensed under the Apache License, Version 2.0 (the "SuperLicense");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @author Ignacio del Valle Alles idelvall@brutusin.org
- */
-
-
-
-
-if (typeof brutusin === "undefined") {
-    window.brutusin = new Object();
+//TODO: remove polyfills that alter native prototypes. Performance hit.
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function (searchString, position) {
+        position = position || 0;
+        return this.indexOf(searchString, position) === position;
+    };
 }
-else if (!global) {
-    global = {};
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function (searchString, position) {
+        var subjectString = this.toString();
+        if (position === undefined || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
 }
-else if (typeof global.brutusin !== "object") {
-    global.brutusin = new Object();
+if (!String.prototype.includes) {
+    String.prototype.includes = function () {
+        'use strict';
+        return String.prototype.indexOf.apply(this, arguments) !== -1;
+    };
 }
-else if (typeof brutusin !== "object") {
-    throw ("brutusin global variable already exists");
+if (!String.prototype.format) {
+    String.prototype.format = function () {
+        var formatted = this;
+        for (var i = 0; i < arguments.length; i++) {
+            var regexp = new RegExp('\\{' + i + '\\}', 'gi');
+            formatted = formatted.replace(regexp, arguments[i]);
+        }
+        return formatted;
+    };
 }
 
-(function () {
 
-    // shims
-    if (!String.prototype.startsWith) {
-        String.prototype.startsWith = function (searchString, position) {
-            position = position || 0;
-            return this.indexOf(searchString, position) === position;
-        };
+function BrutusinForms() {
+    if (!this instanceof BrutusinForms) {
+        return new BrutusinForms();
     }
-    if (!String.prototype.endsWith) {
-        String.prototype.endsWith = function (searchString, position) {
-            var subjectString = this.toString();
-            if (position === undefined || position > subjectString.length) {
-                position = subjectString.length;
-            }
-            position -= searchString.length;
-            var lastIndex = subjectString.indexOf(searchString, position);
-            return lastIndex !== -1 && lastIndex === position;
-        };
-    }
-    if (!String.prototype.includes) {
-        String.prototype.includes = function () {
-            'use strict';
-            return String.prototype.indexOf.apply(this, arguments) !== -1;
-        };
-    }
-    if (!String.prototype.format) {
-        String.prototype.format = function () {
-            var formatted = this;
-            for (var i = 0; i < arguments.length; i++) {
-                var regexp = new RegExp('\\{' + i + '\\}', 'gi');
-                formatted = formatted.replace(regexp, arguments[i]);
-            }
-            return formatted;
-        };
-    }
+    var self = this;
 
-    var BrutusinForms = new Object();
-    BrutusinForms.messages = {
+    self.messages = {
         "validationError": "Validation error",
         "required": "This field is **required**",
         "invalidValue": "Invalid field value",
@@ -90,67 +60,53 @@ else if (typeof brutusin !== "object") {
         "maxProperties": "At most `{0}` properties are allowed"
     };
 
-    /**
-     * Callback functions to be notified after an HTML element has been rendered (passed as parameter).
-     * @type type
-     */
-    BrutusinForms.decorators = new Array();
+    var decorators = [];
 
-    BrutusinForms.addDecorator = function (f) {
-        BrutusinForms.decorators[BrutusinForms.decorators.length] = f;
+    self.addDecorator = function (f) {
+        decorators[decorators.length] = f;
     };
 
-    BrutusinForms.onResolutionStarted = function (element) {
-    };
+    // self.onResolutionStarted = function (element) {};
+    // self.onResolutionFinished = function (element) {};
 
-    BrutusinForms.onResolutionFinished = function (element) {
-    };
-
-    BrutusinForms.onValidationError = function (element, message) {
+    self.onValidationError = function (element, message) {
         element.focus();
         if (!element.className.includes(" error")) {
             element.className += " error";
         }
-        alert(message);
+        console.log(message);
     };
 
-    BrutusinForms.onValidationSuccess = function (element) {
+    self.onValidationSuccess = function (element) {
         element.className = element.className.replace(" error", "");
     };
 
-    /**
-     * Callback function to be notified after a form has been rendered (passed as parameter).
-     * @type type
-     */
-    BrutusinForms.postRender = null;
-    /**
-     * BrutusinForms instances created in the document
-     * @type Array
-     */
-    BrutusinForms.instances = new Array();
+    self.postRender = null;
+    self.instances = [];
     /**
      * BrutusinForms factory method
      * @param {type} schema schema object
-     * @returns {BrutusinForms.create.obj|Object|Object.create.obj}
+     * @returns {self.create.obj|Object|Object.create.obj}
      */
-    BrutusinForms.create = function (schema) {
+    self.create = function (schema) {
         var SCHEMA_ANY = {"type": "any"};
-        var obj = new Object();
+        var obj = {};
+        var schemaMap = {};
+        var dependencyMap = {};
+        var renderInfoMap = {};
 
-        var schemaMap = new Object();
-        var dependencyMap = new Object();
-        var renderInfoMap = new Object();
         var container;
         var data;
         var error;
         var initialValue;
         var inputCounter = 0;
-        var formId = "BrutusinForms#" + BrutusinForms.instances.length;
-        populateSchemaMap("$", schema);
+        var formId = "BrutusinForms#" + self.instances.length;
+
+        //populateSchemaMap("$", schema);
 
         validateDepencyMapIsAcyclic();
 
-        var renderers = new Object();
+        var renderers = {};
 
         renderers["integer"] = function (container, id, parentObject, propertyProvider, value) {
             renderers["string"](container, id, parentObject, propertyProvider, value);
@@ -226,44 +182,44 @@ else if (typeof brutusin !== "object") {
                     var value = getValue(s, input);
                     if (value === null) {
                         if (s.required) {
-                            return BrutusinForms.messages["required"];
+                            return self.messages["required"];
                         }
                     } else {
                         if (s.pattern && !s.pattern.test(value)) {
-                            return BrutusinForms.messages["pattern"].format(s.pattern.source);
+                            return self.messages["pattern"].format(s.pattern.source);
                         }
                         if (s.minLength) {
                             if (!value || s.minLength > value.length) {
-                                return BrutusinForms.messages["minLength"].format(s.minLength);
+                                return self.messages["minLength"].format(s.minLength);
                             }
                         }
                         if (s.maxLength) {
                             if (value && s.maxLength < value.length) {
-                                return BrutusinForms.messages["maxLength"].format(s.maxLength);
+                                return self.messages["maxLength"].format(s.maxLength);
                             }
                         }
                     }
                     if (value !== null && !isNaN(value)) {
                         if (s.multipleOf && value % s.multipleOf !== 0) {
-                            return BrutusinForms.messages["multipleOf"].format(s.multipleOf);
+                            return self.messages["multipleOf"].format(s.multipleOf);
                         }
                         if (s.hasOwnProperty("maximum")) {
                             if (s.exclusiveMaximum && value >= s.maximum) {
-                                return BrutusinForms.messages["exclusiveMaximum"].format(s.maximum);
+                                return self.messages["exclusiveMaximum"].format(s.maximum);
                             } else if (!s.exclusiveMaximum && value > s.maximum) {
-                                return BrutusinForms.messages["maximum"].format(s.maximum);
+                                return self.messages["maximum"].format(s.maximum);
                             }
                         }
                         if (s.hasOwnProperty("minimum")) {
                             if (s.exclusiveMinimum && value <= s.minimum) {
-                                return BrutusinForms.messages["exclusiveMinimum"].format(s.minimum);
+                                return self.messages["exclusiveMinimum"].format(s.minimum);
                             } else if (!s.exclusiveMinimum && value < s.minimum) {
-                                return BrutusinForms.messages["minimum"].format(s.minimum);
+                                return self.messages["minimum"].format(s.minimum);
                             }
                         }
                     }
                 } catch (error) {
-                    return BrutusinForms.messages["invalidValue"];
+                    return self.messages["invalidValue"];
                 }
             };
 
@@ -286,19 +242,6 @@ else if (typeof brutusin !== "object") {
                 input.title = s.description;
                 input.placeholder = s.description;
             }
-//        if (s.pattern) {
-//            input.pattern = s.pattern;
-//        }
-//        if (s.required) {
-//            input.required = true;
-//        }
-//
-//        if (s.minimum) {
-//            input.min = s.minimum;
-//        }
-//        if (s.maximum) {
-//            input.max = s.maximum;
-//        }
             input.onchange();
             input.id = getInputId();
             inputCounter++;
@@ -362,7 +305,7 @@ else if (typeof brutusin !== "object") {
         renderers["object"] = function (container, id, parentObject, propertyProvider, value) {
 
             function createStaticPropertyProvider(propname) {
-                var ret = new Object();
+                var ret = {};
                 ret.getValue = function () {
                     return propname;
                 };
@@ -390,33 +333,33 @@ else if (typeof brutusin !== "object") {
                 nameInput.getValidationError = function () {
                     if (nameInput.previousValue !== nameInput.value) {
                         if (current.hasOwnProperty(nameInput.value)) {
-                            return BrutusinForms.messages["addpropNameExistent"];
+                            return self.messages["addpropNameExistent"];
                         }
                     }
                     if (!nameInput.value) {
-                        return BrutusinForms.messages["addpropNameRequired"];
+                        return self.messages["addpropNameRequired"];
                     }
                 };
                 var pp = createPropertyProvider(
-                        function () {
-                            if (nameInput.value) {
-                                return nameInput.value;
-                            } else {
-                                return keyForBlank;
-                            }
-                        },
-                        function (oldPropertyName) {
-                            if (pp.getValue() === oldPropertyName) {
-                                return;
-                            }
-                            if (!oldPropertyName) {
-                                oldPropertyName = keyForBlank;
-                            }
-                            if (oldPropertyName && current.hasOwnProperty(oldPropertyName)) {
-                                current[pp.getValue()] = current[oldPropertyName];
-                                delete current[oldPropertyName];
-                            }
-                        });
+                    function () {
+                        if (nameInput.value) {
+                            return nameInput.value;
+                        } else {
+                            return keyForBlank;
+                        }
+                    },
+                    function (oldPropertyName) {
+                        if (pp.getValue() === oldPropertyName) {
+                            return;
+                        }
+                        if (!oldPropertyName) {
+                            oldPropertyName = keyForBlank;
+                        }
+                        if (oldPropertyName && current.hasOwnProperty(oldPropertyName)) {
+                            current[pp.getValue()] = current[oldPropertyName];
+                            delete current[oldPropertyName];
+                        }
+                    });
 
                 nameInput.onblur = function () {
                     if (nameInput.previousValue !== nameInput.value) {
@@ -462,7 +405,7 @@ else if (typeof brutusin !== "object") {
 
             var schemaId = getSchemaId(id);
             var s = getSchema(schemaId);
-            var current = new Object();
+            var current = {};
             if (!parentObject) {
                 data = current;
             } else {
@@ -507,10 +450,10 @@ else if (typeof brutusin !== "object") {
                 if (s.maxProperties || s.minProperties) {
                     addButton.getValidationError = function () {
                         if (s.minProperties && propNum + table.rows.length < s.minProperties) {
-                            return BrutusinForms.messages["minProperties"].format(s.minProperties);
+                            return self.messages["minProperties"].format(s.minProperties);
                         }
                         if (s.maxProperties && propNum + table.rows.length > s.maxProperties) {
-                            return BrutusinForms.messages["maxProperties"].format(s.maxProperties);
+                            return self.messages["maxProperties"].format(s.maxProperties);
                         }
                     };
                 }
@@ -578,7 +521,7 @@ else if (typeof brutusin !== "object") {
             var schemaId = getSchemaId(id);
             var s = getSchema(schemaId);
             var itemS = getSchema(s.items);
-            var current = new Array();
+            var current = [];
             if (!parentObject) {
                 data = current;
             } else {
@@ -601,10 +544,10 @@ else if (typeof brutusin !== "object") {
             addButton.setAttribute('type', 'button');
             addButton.getValidationError = function () {
                 if (s.minItems && s.minItems > table.rows.length) {
-                    return BrutusinForms.messages["minItems"].format(s.minItems);
+                    return self.messages["minItems"].format(s.minItems);
                 }
                 if (s.maxItems && s.maxItems < table.rows.length) {
-                    return BrutusinForms.messages["maxItems"].format(s.maxItems);
+                    return self.messages["maxItems"].format(s.maxItems);
                 }
             };
             addButton.onclick = function () {
@@ -656,8 +599,8 @@ else if (typeof brutusin !== "object") {
             if (dependencyMap.hasOwnProperty("$")) {
                 onDependencyChanged("$");
             }
-            if (BrutusinForms.postRender) {
-                BrutusinForms.postRender(obj);
+            if (self.postRender) {
+                self.postRender(obj);
             }
         };
 
@@ -675,7 +618,7 @@ else if (typeof brutusin !== "object") {
                     if (object.length === 0) {
                         return null;
                     }
-                    var clone = new Array();
+                    var clone = [];
                     for (var i = 0; i < object.length; i++) {
                         clone[i] = removeEmptiesAndNulls(object[i]);
                     }
@@ -683,7 +626,7 @@ else if (typeof brutusin !== "object") {
                 } else if (object === "") {
                     return null;
                 } else if (object instanceof Object) {
-                    var clone = new Object();
+                    var clone = {};
                     for (var prop in object) {
                         if (prop.startsWith("$") && prop.endsWith("$")) {
                             continue;
@@ -698,15 +641,15 @@ else if (typeof brutusin !== "object") {
                     return object;
                 }
             }
+
             if (!container) {
                 return null;
             } else {
                 return removeEmptiesAndNulls(data);
-                ;
             }
         };
 
-        BrutusinForms.instances[BrutusinForms.instances.length] = obj;
+        self.instances[self.instances.length] = obj;
 
         return obj;
 
@@ -729,24 +672,25 @@ else if (typeof brutusin !== "object") {
                 }
                 delete stack[id];
             }
-            var visitInfo = new Object();
+
+            var visitInfo = {};
             for (var id in dependencyMap) {
                 if (visitInfo.hasOwnProperty(id)) {
                     continue;
                 }
-                dfs(visitInfo, new Object(), id);
+                dfs(visitInfo, {}, id);
             }
         }
 
         function appendChild(parent, child, schema) {
             parent.appendChild(child);
-            for (var i = 0; i < BrutusinForms.decorators.length; i++) {
-                BrutusinForms.decorators[i](child, schema);
+            for (var i = 0; i < self.decorators.length; i++) {
+                self.decorators[i](child, schema);
             }
         }
 
         function createPseudoSchema(schema) {
-            var pseudoSchema = new Object();
+            var pseudoSchema = {};
             for (var p in schema) {
                 if (p === "items" || p === "properties" || p === "additionalProperties") {
                     continue;
@@ -766,7 +710,7 @@ else if (typeof brutusin !== "object") {
             schemaMap[name] = pseudoSchema;
             if (schema.type === "object") {
                 if (schema.properties) {
-                    pseudoSchema.properties = new Object();
+                    pseudoSchema.properties = {};
                     for (var prop in schema.properties) {
                         var childProp = name + "." + prop;
                         pseudoSchema.properties[prop] = childProp;
@@ -786,7 +730,7 @@ else if (typeof brutusin !== "object") {
                 pseudoSchema.items = name + "[#]";
                 populateSchemaMap(pseudoSchema.items, schema.items);
             } else if (schema.hasOwnProperty("oneOf")) {
-                pseudoSchema.oneOf = new Array();
+                pseudoSchema.oneOf = [];
                 pseudoSchema.type = "oneOf";
                 for (var i in schema.oneOf) {
                     // console.log(schema.oneOf[i]);
@@ -799,7 +743,7 @@ else if (typeof brutusin !== "object") {
                 if (schema.dependsOn === null) {
                     schema.dependsOn = ["$"];
                 }
-                var arr = new Array();
+                var arr = [];
                 for (var i = 0; i < schema.dependsOn.length; i++) {
                     if (!schema.dependsOn[i]) {
                         arr[i] = "$";
@@ -817,7 +761,7 @@ else if (typeof brutusin !== "object") {
                 for (var i = 0; i < arr.length; i++) {
                     var entry = dependencyMap[arr[i]];
                     if (!entry) {
-                        entry = new Array();
+                        entry = [];
                         dependencyMap[arr[i]] = entry;
                     }
                     entry[entry.length] = name;
@@ -857,10 +801,10 @@ else if (typeof brutusin !== "object") {
             if (element.hasOwnProperty("getValidationError")) {
                 var error = element.getValidationError();
                 if (error) {
-                    BrutusinForms.onValidationError(element, error);
+                    self.onValidationError(element, error);
                     ret = false;
                 } else {
-                    BrutusinForms.onValidationSuccess(element);
+                    self.onValidationSuccess(element);
                 }
             }
             if (element.childNodes) {
@@ -885,7 +829,7 @@ else if (typeof brutusin !== "object") {
             //console.log(id);
             var schemaId = getSchemaId(id);
             var s = getSchema(schemaId);
-            renderInfoMap[schemaId] = new Object();
+            renderInfoMap[schemaId] = {};
             renderInfoMap[schemaId].titleContainer = titleContainer;
             renderInfoMap[schemaId].container = container;
             renderInfoMap[schemaId].parentObject = parentObject;
@@ -919,7 +863,7 @@ else if (typeof brutusin !== "object") {
          * @returns {Object.create.createPropertyProvider.ret}
          */
         function createPropertyProvider(getValue, onchange) {
-            var ret = new Object();
+            var ret = {};
             ret.getValue = getValue;
             ret.onchange = onchange;
             return ret;
@@ -987,12 +931,14 @@ else if (typeof brutusin !== "object") {
                     }
                 }
             }
+
             function cleanData(schemaId) {
                 var expression = new Expression(schemaId);
                 expression.visit(data, function (data, parent, property) {
                     delete parent[property];
                 });
             }
+
             var arr = dependencyMap[name];
             if (!arr || !obj.schemaResolver) {
                 return;
@@ -1011,9 +957,9 @@ else if (typeof brutusin !== "object") {
                         }
                     }
                 }
-                BrutusinForms.onResolutionFinished(source);
+                self.onResolutionFinished(source);
             };
-            BrutusinForms.onResolutionStarted(source);
+            self.onResolutionStarted(source);
             obj.schemaResolver(arr, obj.getData(), cb);
 
 
@@ -1023,7 +969,7 @@ else if (typeof brutusin !== "object") {
             if (exp === null || exp.length === 0 || exp === ".") {
                 exp = "$";
             }
-            var queue = new Array();
+            var queue = [];
             var tokens = parseTokens(exp);
             var isInBracket = false;
             var numInBracket = 0;
@@ -1130,13 +1076,14 @@ else if (typeof brutusin !== "object") {
                             visit(name, queue, child, data, currentToken);
                         }
                     } else if ("boolean" === typeof data
-                            || "number" === typeof data
-                            || "string" === typeof data) {
+                        || "number" === typeof data
+                        || "string" === typeof data) {
                         throw ("Node is leaf but still are tokens remaining: " + currentToken);
                     } else {
                         throw ("Node type '" + typeof data + "' not supported for index field '" + name + "'");
                     }
                 }
+
                 visit(this.exp, this.queue, data);
             };
 
@@ -1144,7 +1091,7 @@ else if (typeof brutusin !== "object") {
                 if (exp === null) {
                     return null;
                 }
-                var ret = new Array();
+                var ret = [];
                 var commentChar = null;
                 var start = 0;
                 for (var i = 0; i < exp.length; i++) {
@@ -1195,5 +1142,7 @@ else if (typeof brutusin !== "object") {
             }
         }
     };
-    brutusin["json-forms"] = BrutusinForms;
-}());
+    return self;
+}
+
+module.exports = new self();

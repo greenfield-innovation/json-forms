@@ -19,23 +19,24 @@
     "schema"
   ],
   "devDependencies": {
+    "brfs": "^1.4.3",
+    "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "codecov.io": "^0.1.6",
     "gulp": "^3.5.6",
     "gulp-angular-templatecache": "^1.2.1",
     "gulp-concat": "^2.2.0",
     "gulp-gh-pages": "^0.5.3",
-    "gulp-jscs": "^1.1.0",
+    "gulp-jscs": "^3.0.2",
     "gulp-minify-css": "^1.2.1",
-    "gulp-minify-html": "^0.1.1",
-    "gulp-protractor": "^1.0.0",
+    "gulp-minify-html": "^1.0.6",
+    "gulp-protractor": "^2.2.0",
     "gulp-rename": "^1.2.0",
-    "gulp-uglify": "^0.2.1",
-    "gulp-umd": "^0.1.3",
+    "gulp-uglify": "^1.5.3",
+    "gulp-umd": "^0.2.0",
     "istanbul": "^0.4.2",
     "karma": "^0.13.22",
-    "rimraf": "^2.5.1",
-    "karma-browserify": "^5.0.2",
+    "karma-browserify": "^5.0.3",
     "karma-chrome-launcher": "^0.2.2",
     "karma-coverage": "^0.5.3",
     "karma-firefox-launcher": "^0.1.7",
@@ -47,6 +48,7 @@
     "lolex": "^1.4.0",
     "mocha": "^2.4.5",
     "phantomjs-prebuilt": "^2.1.3",
+    "rimraf": "^2.5.1",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0",
     "watchify": "^3.7.0"
@@ -74,6 +76,8 @@
     "url": "https://github.com/idelvall/brutusin-json-forms/issues"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "karma start karma.conf.js --single-run --browsers PhantomJS",
+    "twatch": "karma start karma.conf.js",
+    "codecov": "cat ./coverage/*/lcov.info | ./node_modules/codecov.io/bin/codecov.io.js"
   }
 }

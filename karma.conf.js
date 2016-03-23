@@ -10,18 +10,21 @@ module.exports = function (config) {
 
             // frameworks to use
             // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-            frameworks: ['mocha', 'sinon-chai', 'browserify'],
+            frameworks: [
+                'browserify',
+                'mocha',
+                'sinon-chai'
+            ],
 
-            // list of files / patterns to load in the browser
+            // all files, including non-commonJS files you need to load before your test cases
             files: [
-                'src/js/*.js',
-                'src/css/*.css',
-                'test/*.spec.js'
+                'src/js/brutusin-json-forms.js',
+                'test/index.spec.js'
             ],
 
             // list of files to exclude
             exclude: [
-                '*.dniff',
+                '*.diff',
                 '*.patch',
                 '*.rej',
                 'tmp',
@@ -32,12 +35,19 @@ module.exports = function (config) {
 
             // preprocess matching files before serving them to the browser
             // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-            preprocessors: {},
+            preprocessors: {
+                'test/*.spec.js': [ 'browserify' ]
+            },
+
+            browserify: {
+                debug: true,
+                transform: [ 'brfs' ]
+            },
 
             // test results reporter to use
             // possible values: 'dots', 'progress'
             // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-            reporters: ['progress'],
+            reporters: ['mocha', 'coverage'],
 
             // web server port
             port: 9876,
@@ -55,7 +65,11 @@ module.exports = function (config) {
 
             // start these browsers
             // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-            browsers: ['Chrome', 'Safari', 'PhantomJS'],
+            browsers: [
+                'Chrome'
+                // ,'Safari'
+                // ,'PhantomJS'
+            ],
 
             // Continuous Integration mode
             // if true, Karma captures browsers, runs the tests and exits
